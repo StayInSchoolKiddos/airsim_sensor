@@ -1,4 +1,4 @@
-#  Airsim Sensor
+#  Airsim JSBsim
 This repo is used to wrap and interface with ROS 2 using Airsim's camera and lidar, this is done since the airsom_ros_pkgs require you to be in a Drone or Car. There is no support for Computer Vision Mode
 
 ## Install dependencies
