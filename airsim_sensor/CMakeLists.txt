@@ -42,6 +42,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/airsim_camera_node.py
+  scripts/display_camera.py
   DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()
