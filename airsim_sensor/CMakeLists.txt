@@ -9,62 +9,39 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-#https://docs.ros.org/en/foxy/How-To-Guides/Ament-CMake-Python-Documentation.html
-
-# Find dependencies this will allow CPP and python
+# Find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclpy REQUIRED)
+find_package(sensor_msgs REQUIRED)    # Ensure this is included
+find_package(cv_bridge REQUIRED)      # Ensure this is included if you are using cv_bridge
 
-find_package(rosidl_default_generators REQUIRED)
+# Add executable and link dependencies
+add_executable(shared_image_reader src/shared_image_reader.cpp)
+ament_target_dependencies(shared_image_reader
+  rclcpp
+  sensor_msgs     # Link sensor_msgs
+  cv_bridge       # Link cv_bridge if you are using it
+)
 
-# rosidl_generate_interfaces(${PROJECT_NAME}
-#   "msg/Telem.msg"
-#   "msg/CtlTraj.msg"
-#  )
-
-# # Include Cpp "include" directory
-# include_directories(include)
-# # Create Cpp executable
-# add_executable(cpp_node src/cpp_node.cpp)
-# ament_target_dependencies(cpp_node rclcpp)
-# # Install Cpp executables
-# install(TARGETS
-#   cpp_node
-#   DESTINATION lib/${PROJECT_NAME}
-# )
-
-
+# Install Cpp executables
+install(TARGETS
+  shared_image_reader
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
+
 # Install Python executables
 install(PROGRAMS
   scripts/airsim_camera_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
-ament_package()
 
-##tests 
-# if(BUILD_TESTING)
-#   find_package(ament_cmake_pytest REQUIRED)
-#   set(_pytest_tests
-#     tests/test_a.py
-#     # Add other test files here
-#   )
-#   foreach(_test_path ${_pytest_tests})
-#     get_filename_component(_test_name ${_test_path} NAME_WE)
-#     ament_add_pytest_test(${_test_name} ${_test_path}
-#       APPEND_ENV PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}
-#       TIMEOUT 60
-#       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-#     )
-#   endforeach()
-# endif()
-
-#launch
+# Launch files
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
+
+ament_package()
