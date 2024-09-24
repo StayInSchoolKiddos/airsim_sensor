@@ -1,72 +1,55 @@
 #!/usr/bin/env python3
 
-import airsim
-import numpy as np
-import os
-import pprint
-import time
-import cv2
-from concurrent.futures import ThreadPoolExecutor
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-import time 
-pp = pprint.PrettyPrinter(indent=4)
+import cv2
 
-# Get WSL_HOST_IP
-WSL_HOST_IP = os.getenv('WSL_HOST_IP', 'localhost')
-print('WSL_HOST_IP: ', WSL_HOST_IP)
+class ImageSubscriber(Node):
 
-client = airsim.VehicleClient(ip=WSL_HOST_IP)
-client.confirmConnection()
-
-# API to access camera data
-print('Connected to AirSim')
-front_camera = 'front_center_custom'
-camera_info = client.simGetCameraInfo(front_camera)
-print("CameraInfo:")
-pp.pprint(camera_info)
-
-# Function to process image
-def process_image(image):
-    img1d = np.frombuffer(image.image_data_uint8, dtype=np.uint8)
-    img_rgb = img1d.reshape(image.height, image.width, 3)
-    img_rgba = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2RGBA)
-    return img_rgba
-
-# ROS 2 Node to publish image
-class ImagePublisher(Node):
     def __init__(self):
-        super().__init__('image_publisher')
-        self.publisher_ = self.create_publisher(Image, 'airsim_image', 1)
-        self.bridge = CvBridge()
-        self.client = client
-        self.front_camera = front_camera
-        self.dt = 0.0001
-        self.timer = self.create_timer(self.dt, self.timer_callback)  # Increase rate by reducing timer period
+        super().__init__('ue_image_subscriber')
 
-    def timer_callback(self):
-        start_time = time.time()
-        responses = self.client.simGetImages([
-            airsim.ImageRequest(self.front_camera, airsim.ImageType.Scene, False, 
-                                compress=False)
-        ])
-        print("Time taken to get image: ", time.time() - start_time)
-        if responses:
-            image = responses[0]
-            img_rgb = process_image(image)
-            #switch image to bgr format
-            img_rgb = cv2.cvtColor(img_rgb, cv2.COLOR_RGBA2BGRA)
-            ros_image = self.bridge.cv2_to_imgmsg(img_rgb, encoding="rgba8")
-            self.publisher_.publish(ros_image)
+        # Create a subscriber to the 'ue_image_topic'
+        self.subscription = self.create_subscription(
+            Image,
+            'ue_image_data',
+            self.listener_callback,
+            10)
+
+        # Initialize CvBridge for converting ROS images to OpenCV format
+        self.bridge = CvBridge()
+
+    def listener_callback(self, msg):
+        self.get_logger().info('Received image data')
+
+        # Convert ROS Image message to OpenCV image
+        cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+
+        # Display the image using OpenCV
+        cv2.imshow("Unreal Engine Image", cv_image)
+        cv2.waitKey(1)  # Display image for 1ms, then refresh
+
 
 def main(args=None):
     rclpy.init(args=args)
-    image_publisher = ImagePublisher()
-    rclpy.spin(image_publisher)
-    image_publisher.destroy_node()
-    rclpy.shutdown()
+
+    # Create the image subscriber node
+    image_subscriber = ImageSubscriber()
+
+    try:
+        # Spin the node so it keeps running
+        rclpy.spin(image_subscriber)
+    except KeyboardInterrupt:
+        # Gracefully handle shutdown
+        pass
+    finally:
+        # Cleanup when the node is stopped
+        image_subscriber.destroy_node()
+        rclpy.shutdown()
+        cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     main()
