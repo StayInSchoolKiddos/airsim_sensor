@@ -22,8 +22,6 @@ def generate_launch_description():
             description='Topic name for published images'
         ),
 
-
-
         # Launch the node with parameters and topic remapping
         Node(
             package='airsim_sensor',  # Replace with your package name

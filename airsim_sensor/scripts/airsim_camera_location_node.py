@@ -6,7 +6,7 @@ import airsim
 import os
 import tf2_geometry_msgs
 import tf_transformations
-
+import numpy as np
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -29,15 +29,17 @@ class AirsimCameraFrame(Node):
     def __init__(self) -> None:
         super().__init__('airsim_camera_frame')
         #declare parameters and their types
-        self.declare_parameter('airsim_camera_cam_frame', 'camera_frame_2')
-        self.declare_parameter('airsim_move_pawn_name', 'AirsimMovePawn_2')
+        self.declare_parameter('airsim_camera_cam_frame', 'camera_frame_1')
+        self.declare_parameter('airsim_move_pawn_name', 'AirsimMovePawn_1')
         self.declare_parameter('world_frame', 'world')
         self.declare_parameter('dt', 0.01)
         
         # this is NED frame
         self.declare_parameter('ned_offset_x', 0.0)
         self.declare_parameter('ned_offset_y', 0.0)
-        self.declare_parameter('ned_offset_z', 0.25)
+        self.declare_parameter('ned_offset_z', 0.0)
+        self.declare_parameter('pitch_rot_deg', 90.0)
+        self.declare_parameter('use_pitch_rot', False)
         
         self.cam_frame = self.get_parameter('airsim_camera_cam_frame').get_parameter_value().string_value
         self.unreal_asset = self.get_parameter('airsim_move_pawn_name').get_parameter_value().string_value
@@ -46,7 +48,8 @@ class AirsimCameraFrame(Node):
         self.ned_offset_x = self.get_parameter('ned_offset_x').get_parameter_value().double_value
         self.ned_offset_y = self.get_parameter('ned_offset_y').get_parameter_value().double_value
         self.ned_offset_z = self.get_parameter('ned_offset_z').get_parameter_value().double_value
-        
+        self.pitch_rot_deg = self.get_parameter('pitch_rot_deg').get_parameter_value().double_value
+        self.use_pitch_rot = self.get_parameter('use_pitch_rot').get_parameter_value().bool_value
         
         self.tf = Buffer()
         self.tf_listener = TransformListener(self.tf, self)
@@ -92,7 +95,6 @@ class AirsimCameraFrame(Node):
         enu_rotation = transformation.transform.rotation
         enu_rotation = [enu_rotation.x, enu_rotation.y, 
                         enu_rotation.z, enu_rotation.w]
-        print(f"Translation: {translation}")   
 
         aircraft_position = self.get_location_position()
 
@@ -114,6 +116,15 @@ class AirsimCameraFrame(Node):
         # pose.orientation.z_val = ned_quaternion[2]
         # pose.orientation.w_val = ned_quaternion[3]
         
+        #rotate pitch by 90 degrees
+        # enu_rotation = tf_transformations.quaternion_from_euler(0, 0, 1.57)
+        #enu_rotation = tf_transformations.quaternion_from_euler(0, -1.57, 0)
+        if self.use_pitch_rot:
+            r,p,y = tf_transformations.euler_from_quaternion(enu_rotation)
+            
+            enu_rotation = tf_transformations.quaternion_from_euler(
+                r, np.deg2rad(self.pitch_rot_deg), y )
+            
         pose.orientation.x_val = enu_rotation[0]
         pose.orientation.y_val = enu_rotation[1]
         pose.orientation.z_val = enu_rotation[2]

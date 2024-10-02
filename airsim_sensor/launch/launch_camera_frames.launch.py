@@ -24,13 +24,18 @@ def generate_launch_description():
         )
     )
     
-    launch_file_name = 'launch_single_camera_frame.launch.py'
+    launch_file_name = 'single_camera_frame.launch.py'
+    camera_position_launch_file_name = 'single_camera_position.launch.py'
+    
+    
     base_frame = 'SimpleFlight/odom_local'
+    pawn_1 = 'AirsimMovePawn_1'
+    x_offset = str(0.5)
     static_cam_frame_1 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), 
                                        '/'+launch_file_name]),
         launch_arguments={
-            'x': '0.1',
+            'x': '0.0',
             'y': '0.0',
             'z': '0.0',
             'roll': '0.0',
@@ -41,15 +46,31 @@ def generate_launch_description():
             'node_name': 'static_transform_publisher_1'
         }.items()
     )
+    position_cam_1 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([ThisLaunchFileDir(), 
+                                       '/' + camera_position_launch_file_name]),
+        launch_arguments={
+            'airsim_camera_frame': 'camera_frame_1',
+            'airsim_move_pawn_name': pawn_1,
+            'world_frame': 'world',
+            'dt': '0.01',
+            'ned_offset_x': x_offset,
+            'ned_offset_y': '0.0',
+            'ned_offset_z': '0.0',
+            'node_name': 'camera_position_publisher_1'
+        }.items()
+    )
+    
     
     pitch_rot = str(np.deg2rad(90.0))
+    z = str(0.5)
     static_cam_frame_2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), 
                                        '/'+launch_file_name]),
         launch_arguments={
             'x': '0.0',
             'y': '0.0',
-            'z': '0.5',
+            'z': z,
             'roll': '0.0',
             'pitch': pitch_rot,
             'yaw': '0.0',
@@ -59,9 +80,28 @@ def generate_launch_description():
         }.items()
     )
     
+    position_cam_2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([ThisLaunchFileDir(), 
+                                       '/' + camera_position_launch_file_name]),
+        launch_arguments={
+            'airsim_camera_frame': 'camera_frame_2',
+            'airsim_move_pawn_name': 'AirsimMovePawn_2',
+            'world_frame': 'world',
+            'dt': '0.01',
+            'ned_offset_x': '0.0',
+            'ned_offset_y': '0.0',
+            'ned_offset_z': z,
+            'node_name': 'camera_position_publisher_2',
+            'use_pitch_rot': 'True',
+            'pitch_rot_deg': '-90.0'
+        }.items()
+    )
+    
     
     return LaunchDescription([
         static_cam_frame_1,
         static_cam_frame_2,
+        position_cam_1,
+        position_cam_2,
         airsim_launch
     ])

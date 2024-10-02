@@ -12,7 +12,7 @@ def generate_launch_description():
     
     """
     
-    launch_file_name = 'launch_single_camera_info.launch.py'
+    launch_file_name = 'single_camera_info.launch.py'
     cam1_info = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([ThisLaunchFileDir(), 
                                        '/'+launch_file_name]),
