@@ -23,7 +23,7 @@ def generate_launch_description():
     
     image_topic_1_arg = DeclareLaunchArgument(
         'image_topic_1',
-        default_value='/camera/image_raw_1',
+        default_value='/camera1/image_raw',
         description='Image topic for Node 1'
     )
     
@@ -44,7 +44,7 @@ def generate_launch_description():
     
     image_topic_2_arg = DeclareLaunchArgument(
         'image_topic_2',
-        default_value='/camera/image_raw_2',
+        default_value='/camera2/image_raw',
         description='Image topic for Node 2'
     )
     

@@ -36,6 +36,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/airsim_camera_node.py
   scripts/airsim_camera_location_node.py
+  scripts/airsim_camera_info_pub_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

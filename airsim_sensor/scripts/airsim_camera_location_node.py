@@ -12,7 +12,6 @@ from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 
 
-
 class AirsimCameraFrame(Node):    
     """
     Attributes:
