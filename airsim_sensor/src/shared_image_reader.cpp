@@ -20,10 +20,18 @@ public:
     ImagePublisher()
         : Node("ue_image_publisher")
     {
-        publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/ue_image_data", 100);
+        // Declare parameters for file path and token number (ProjectID)
+        this->declare_parameter<std::string>("file_path", "/home/justin/Documents/Unreal Projects/TestUE5/Source/data.conf");
+        this->declare_parameter<int>("project_id", 1);
 
-        // Create shared memory key
-        key = ftok("/home/justin/Documents/Unreal Projects/TestUE5/Source/data.conf", 1);
+        // Get the parameters from the node
+        std::string file_path = this->get_parameter("file_path").as_string();
+        int project_id = this->get_parameter("project_id").as_int();
+
+        publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/camera/image_raw", 100);
+
+        // Create shared memory key using user-specified file path and ProjectID
+        key = ftok(file_path.c_str(), project_id);
         shmid = shmget(key, data_sz + sizeof(unsigned long), 0666 | IPC_CREAT);
         
         if (shmid == -1)

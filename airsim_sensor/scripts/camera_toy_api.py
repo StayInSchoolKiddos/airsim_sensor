@@ -1,4 +1,5 @@
-import airsim 
+import cosysairsim as airsim
+
 import numpy as np
 import os 
 import pprint
